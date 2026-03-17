@@ -1,5 +1,5 @@
 {
-  "name": "sp-parser",
+  "name": "@cheminfo/sp-parser",
   "version": "1.0.1",
   "license": "MIT",
   "description": "Parse PerkinElmer SP spectral files",
