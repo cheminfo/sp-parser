@@ -23,14 +23,21 @@ test('parse uv.sp file from readFileSync', () => {
 
   expect(x.symbol).toBe('x');
   expect(x.label).toBe('nm');
+  expect(x.units).toBe('nm');
   expect(x.unitType).toBe(11);
+  expect(x.min).toBe(780);
+  expect(x.max).toBe(380);
   expect(x.data).toHaveLength(81);
   expect(x.data[0]).toBe(780);
   expect(x.data[80]).toBe(380);
 
   expect(y.symbol).toBe('y');
   expect(y.label).toBe('nm');
+  expect(y.units).toBe('nm');
   expect(y.unitType).toBe(0);
+  expect(y.isDependent).toBe(true);
+  expect(y.min).toBe(0);
+  expect(y.max).toBe(241.68);
   expect(y.data).toHaveLength(81);
   expect(y.data[0]).toBeCloseTo(241.68, 1);
   expect(y.data[80]).toBeCloseTo(9.8, 1);
@@ -50,7 +57,7 @@ test('parse uv.sp file from blob', async () => {
 
 test('parse uv.sp from Uint8Array', () => {
   const data = readFileSync(join(import.meta.dirname, 'data', 'uv.sp'));
-  const uint8 = new Uint8Array(data.buffer);
+  const uint8 = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
   const result = parse(uint8);
 
   expect(result.header.signature).toBe('PEPE');

@@ -40,6 +40,7 @@
     "@types/node": "^25.5.0",
     "@vitest/coverage-v8": "^4.1.0",
     "@zakodium/tsconfig": "^1.0.3",
+    "cheminfo-types": "^1.10.0",
     "eslint": "^9.39.4",
     "eslint-config-cheminfo-typescript": "^21.1.0",
     "prettier": "^3.8.1",

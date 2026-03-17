@@ -1,3 +1,4 @@
+import type { MeasurementVariable } from 'cheminfo-types';
 import type { IOBuffer } from 'iobuffer';
 
 export type InputData = ArrayBufferLike | ArrayBufferView | IOBuffer | Buffer;
@@ -58,17 +59,11 @@ export interface SPSpectrumMeta {
 }
 
 /**
- * An axis variable (x or y).
+ * An axis variable (x or y) extending MeasurementVariable with SP-specific unitType.
  */
-export interface SPVariable {
-  /** Axis symbol ('x' or 'y'). */
-  symbol: string;
-  /** Axis label (e.g., "nm"). */
-  label: string;
-  /** Unit type code. */
+export interface SPVariable extends MeasurementVariable<Float64Array> {
+  /** Unit type code from the SP file. */
   unitType: number;
-  /** Data values. */
-  data: Float64Array;
 }
 
 /**

@@ -26,14 +26,21 @@ test('parse ir.sp file (FTIR infrared spectrum)', () => {
 
   expect(x.symbol).toBe('x');
   expect(x.label).toBe('cm-1');
+  expect(x.units).toBe('cm-1');
   expect(x.unitType).toBe(10);
+  expect(x.min).toBe(4000);
+  expect(x.max).toBe(700);
   expect(x.data).toHaveLength(3301);
   expect(x.data[0]).toBe(4000);
   expect(x.data[3300]).toBe(700);
 
   expect(y.symbol).toBe('y');
   expect(y.label).toBe('A');
+  expect(y.units).toBe('A');
   expect(y.unitType).toBe(1);
+  expect(y.isDependent).toBe(true);
+  expect(y.min).toBeCloseTo(-0.0442, 3);
+  expect(y.max).toBeCloseTo(0.3591, 3);
   expect(y.data).toHaveLength(3301);
   expect(y.data[0]).toBeCloseTo(0.0372, 3);
   expect(y.data[3300]).toBeCloseTo(0.0042, 3);

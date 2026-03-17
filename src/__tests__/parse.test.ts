@@ -18,8 +18,8 @@ test('uv and ir files produce different spectra types', () => {
   const irSpectrum = irResult.spectra[0]!;
 
   // UV uses nm, IR uses cm-1
-  expect(uvSpectrum.variables.x.label).toBe('nm');
-  expect(irSpectrum.variables.x.label).toBe('cm-1');
+  expect(uvSpectrum.variables.x.units).toBe('nm');
+  expect(irSpectrum.variables.x.units).toBe('cm-1');
 
   // Different unit types
   expect(uvSpectrum.variables.x.unitType).toBe(11);
