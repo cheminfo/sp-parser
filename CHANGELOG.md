@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/cheminfo/sp-parser/compare/v1.0.2...v1.0.3) (2026-03-17)
+
+
+### Bug Fixes
+
+* update repository, bugs, and homepage URLs to sp-parser ([7a33e0e](https://github.com/cheminfo/sp-parser/commit/7a33e0e5e3b6b23ea437f02cc8f233321b818c43))
+
 ## [1.0.2](https://github.com/cheminfo/sp-parser/compare/v1.0.1...v1.0.2) (2026-03-17)
 
 
