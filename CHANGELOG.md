@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/cheminfo/sp-parser/compare/v1.0.1...v1.0.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* rename to @cheminfo/sp-parser and enable public npm publish ([6ea9570](https://github.com/cheminfo/sp-parser/commit/6ea9570b50ef8f78d06703db4c5f2763d4156dc0))
+
 ## [1.0.1](https://github.com/cheminfo/sp-parser/compare/v1.0.0...v1.0.1) (2026-03-17)
 
 
