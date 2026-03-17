@@ -28,7 +28,7 @@ export function readNestedBlocks(buffer: IOBuffer): SPBlock[] {
     const size = buffer.readInt32();
     if (!buffer.available(size)) break;
     const data = new IOBuffer(buffer.readBytes(size));
-  
+
     blocks.push({ id, data });
   }
   return blocks;
