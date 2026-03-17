@@ -1,5 +1,5 @@
 {
-  "name": "sp-parse",
+  "name": "sp-parser",
   "version": "1.0.0",
   "license": "MIT",
   "description": "Parse PerkinElmer SP spectral files",

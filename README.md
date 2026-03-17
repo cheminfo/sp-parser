@@ -1,16 +1,16 @@
-# sp-parse
+# sp-parser
 
-[![NPM version](https://img.shields.io/npm/v/sp-parse.svg)](https://www.npmjs.com/package/sp-parse)
-[![npm download](https://img.shields.io/npm/dm/sp-parse.svg)](https://www.npmjs.com/package/sp-parse)
-[![test coverage](https://img.shields.io/codecov/c/github/cheminfo/sp-parse.svg)](https://codecov.io/gh/cheminfo/sp-parse)
-[![license](https://img.shields.io/npm/l/sp-parse.svg)](https://github.com/cheminfo/sp-parse/blob/main/LICENSE)
+[![NPM version](https://img.shields.io/npm/v/sp-parser.svg)](https://www.npmjs.com/package/sp-parser)
+[![npm download](https://img.shields.io/npm/dm/sp-parser.svg)](https://www.npmjs.com/package/sp-parser)
+[![test coverage](https://img.shields.io/codecov/c/github/cheminfo/sp-parser.svg)](https://codecov.io/gh/cheminfo/sp-parser)
+[![license](https://img.shields.io/npm/l/sp-parser.svg)](https://github.com/cheminfo/sp-parser/blob/main/LICENSE)
 
 Parse PerkinElmer SP spectral files.
 
 ## Installation
 
 ```console
-npm install sp-parse
+npm install sp-parser
 ```
 
 ## Usage
@@ -18,7 +18,7 @@ npm install sp-parse
 ```js
 import { readFileSync } from 'node:fs';
 
-import { parse } from 'sp-parse';
+import { parse } from 'sp-parser';
 
 const buffer = readFileSync('path/to/file.sp').buffer;
 const result = parse(buffer);
