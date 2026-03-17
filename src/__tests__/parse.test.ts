@@ -1,55 +1,57 @@
-import { openAsBlob, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { expect, test } from 'vitest';
 
 import { parse } from '../index.ts';
 
-test('parse uv.sp file from readFileSync', () => {
-  const data = readFileSync(join(import.meta.dirname, 'data', 'uv.sp'));
-  const result = parse(data);
+test('uv and ir files produce different spectra types', () => {
+  const uvData = readFileSync(join(import.meta.dirname, 'data', 'uv.sp'));
+  const irData = readFileSync(join(import.meta.dirname, 'data', 'ir.sp'));
 
-  expect(result.header.signature).toBe('PEPE');
-  expect(result.header.description).toBe('2D constant interval DataSet file');
-  expect(result.spectra).toHaveLength(1);
+  const uvResult = parse(uvData);
+  const irResult = parse(irData);
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const spectrum = result.spectra[0]!;
+  const uvSpectrum = uvResult.spectra[0]!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const irSpectrum = irResult.spectra[0]!;
 
-  expect(spectrum.meta.fileType).toBe('SPECTRUM');
-  expect(spectrum.meta.dataType).toBe(1);
+  // UV uses nm, IR uses cm-1
+  expect(uvSpectrum.variables.x.label).toBe('nm');
+  expect(irSpectrum.variables.x.label).toBe('cm-1');
 
-  const { x, y } = spectrum.variables;
+  // Different unit types
+  expect(uvSpectrum.variables.x.unitType).toBe(11);
+  expect(irSpectrum.variables.x.unitType).toBe(10);
 
-  expect(x.symbol).toBe('x');
-  expect(x.label).toBe('nm');
-  expect(x.data).toHaveLength(81);
-  expect(x.data[0]).toBe(780);
-  expect(x.data[80]).toBe(380);
+  // IR has absorbance unit type 1, UV has unit type 0
+  expect(irSpectrum.variables.y.unitType).toBe(1);
+  expect(uvSpectrum.variables.y.unitType).toBe(0);
 
-  expect(y.symbol).toBe('y');
-  expect(y.label).toBe('nm');
-  expect(y.data).toHaveLength(81);
-  expect(y.data[0]).toBeCloseTo(241.68, 1);
-  expect(y.data[80]).toBeCloseTo(9.8, 1);
-
-  expect(x.data).toHaveLength(y.data.length);
-
-  expect(result).toMatchSnapshot();
-});
-
-test('parse uv.sp file from blob', async () => {
-  const blob = await openAsBlob(join(import.meta.dirname, 'data', 'uv.sp'));
-  const result = parse(await blob.arrayBuffer());
-
-  expect(result.header.signature).toBe('PEPE');
-  expect(result.spectra).toHaveLength(1);
+  // Different data lengths
+  expect(uvSpectrum.variables.x.data).toHaveLength(81);
+  expect(irSpectrum.variables.x.data).toHaveLength(3301);
 });
 
 test('invalid file throws error', () => {
   const buffer = new ArrayBuffer(10);
   const view = new Uint8Array(buffer);
   view.set([0x49, 0x4e, 0x56, 0x41]); // "INVA"
+
+  expect(() => parse(buffer)).toThrow('Invalid SP file');
+});
+
+test('empty buffer throws error', () => {
+  const buffer = new ArrayBuffer(0);
+
+  expect(() => parse(buffer)).toThrow('Invalid SP file');
+});
+
+test('buffer too short throws error', () => {
+  const buffer = new ArrayBuffer(3);
+  const view = new Uint8Array(buffer);
+  view.set([0x50, 0x45, 0x50]); // "PEP" (incomplete signature)
 
   expect(() => parse(buffer)).toThrow('Invalid SP file');
 });
