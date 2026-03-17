@@ -50,10 +50,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cheminfo/sp-parse.git"
+    "url": "git+https://github.com/cheminfo/sp-parser.git"
   },
   "bugs": {
-    "url": "https://github.com/cheminfo/sp-parse/issues"
+    "url": "https://github.com/cheminfo/sp-parser/issues"
   },
-  "homepage": "https://github.com/cheminfo/sp-parse#readme"
+  "homepage": "https://github.com/cheminfo/sp-parser#readme"
 }
