@@ -85,6 +85,6 @@ export interface SPHistoryRecord {
 export interface SPBlock {
   /** Block identifier. */
   id: number;
-  /** Block data as a byte slice. */
-  data: DataView;
+  /** Block data as an IOBuffer slice. */
+  data: IOBuffer;
 }

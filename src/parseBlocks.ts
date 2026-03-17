@@ -1,38 +1,35 @@
-import type { IOBuffer } from 'iobuffer';
+import { IOBuffer } from 'iobuffer';
 
 import { BLOCK_HEADER_SIZE, MEMBER_ID, TYPE_CODE } from './constants.ts';
 import type { SPBlock, SPHistoryRecord } from './types.ts';
 
 /**
- * Read a single block header (ID + size) from the buffer.
+ * Read a single block header (ID + size) and return its data as an IOBuffer slice.
  * @param buffer - IOBuffer positioned at the start of a block.
- * @returns The block with its ID and data view.
+ * @returns The block with its ID and data as an IOBuffer.
  */
 export function readBlock(buffer: IOBuffer): SPBlock {
   const id = buffer.readUint16();
   const size = buffer.readInt32();
-  const offset = buffer.byteOffset + buffer.offset;
-  const data = new DataView(buffer.buffer, offset, size);
-  buffer.skip(size);
+  const data = new IOBuffer(buffer.readBytes(size));
+
   return { id, data };
 }
 
 /**
- * Read all blocks within a given data range.
- * @param data - DataView containing the block data.
+ * Read all blocks within a given IOBuffer.
+ * @param buffer - IOBuffer containing nested block data.
  * @returns Array of parsed blocks.
  */
-export function readNestedBlocks(data: DataView): SPBlock[] {
+export function readNestedBlocks(buffer: IOBuffer): SPBlock[] {
   const blocks: SPBlock[] = [];
-  let offset = 0;
-  while (offset + BLOCK_HEADER_SIZE <= data.byteLength) {
-    const id = data.getUint16(offset, true);
-    const size = data.getInt32(offset + 2, true);
-    offset += BLOCK_HEADER_SIZE;
-    if (offset + size > data.byteLength) break;
-    const blockData = new DataView(data.buffer, data.byteOffset + offset, size);
-    blocks.push({ id, data: blockData });
-    offset += size;
+  while (buffer.available(BLOCK_HEADER_SIZE)) {
+    const id = buffer.readUint16();
+    const size = buffer.readInt32();
+    if (!buffer.available(size)) break;
+    const data = new IOBuffer(buffer.readBytes(size));
+  
+    blocks.push({ id, data });
   }
   return blocks;
 }
@@ -40,63 +37,62 @@ export function readNestedBlocks(data: DataView): SPBlock[] {
 /**
  * Decode a string value from a member block's data.
  * Expects typeCode CHAR (29987): uint16 string length + ASCII bytes.
- * @param data - DataView of the member block data.
+ * @param data - IOBuffer of the member block data.
  * @returns The decoded string, or empty string if type doesn't match.
  */
-export function decodeString(data: DataView): string {
-  const typeCode = data.getUint16(0, true);
+export function decodeString(data: IOBuffer): string {
+  const typeCode = data.readUint16();
   if (typeCode !== TYPE_CODE.CHAR) return '';
-  const length = data.getUint16(2, true);
-  const bytes = new Uint8Array(data.buffer, data.byteOffset + 4, length);
-  return new TextDecoder().decode(bytes);
+  const length = data.readUint16();
+  return data.readUtf8(length);
 }
 
 /**
  * Decode a float64 range (min, max) from a member block's data.
  * Expects typeCode COORD_RANGE (29981): 2x float64.
- * @param data - DataView of the member block data.
+ * @param data - IOBuffer of the member block data.
  * @returns Tuple of [min, max].
  */
-export function decodeRange(data: DataView): [number, number] {
-  return [data.getFloat64(2, true), data.getFloat64(10, true)];
+export function decodeRange(data: IOBuffer): [number, number] {
+  data.skip(2); // type code
+  return [data.readFloat64(), data.readFloat64()];
 }
 
 /**
  * Decode a single float64 value from a member block's data.
  * Expects typeCode COORD (29979) or DOUBLE (29980).
- * @param data - DataView of the member block data.
+ * @param data - IOBuffer of the member block data.
  * @returns The decoded float64 value.
  */
-export function decodeFloat64(data: DataView): number {
-  return data.getFloat64(2, true);
+export function decodeFloat64(data: IOBuffer): number {
+  data.skip(2); // type code
+  return data.readFloat64();
 }
 
 /**
  * Decode an integer value from a member block's data.
  * Handles LONG (29995), INT (29997), UINT (29996), ULONG (29978), ENUM (29973).
- * Uses the available data size to determine the actual read width.
- * @param data - DataView of the member block data.
+ * @param data - IOBuffer of the member block data.
  * @returns The decoded integer value.
  */
-export function decodeInteger(data: DataView): number {
-  const remaining = data.byteLength - 2;
-  if (remaining >= 4) {
-    const typeCode = data.getUint16(0, true);
+export function decodeInteger(data: IOBuffer): number {
+  const typeCode = data.readUint16();
+  if (data.available(4)) {
     switch (typeCode) {
       case TYPE_CODE.LONG:
       case TYPE_CODE.INT:
-        return data.getInt32(2, true);
+        return data.readInt32();
       case TYPE_CODE.UINT:
       case TYPE_CODE.ULONG:
-        return data.getUint32(2, true);
+        return data.readUint32();
       case TYPE_CODE.ENUM:
       case TYPE_CODE.USHORT:
-        return data.getUint16(2, true);
+        return data.readUint16();
       default:
-        return data.getInt32(2, true);
+        return data.readInt32();
     }
-  } else if (remaining >= 2) {
-    return data.getUint16(2, true);
+  } else if (data.available(2)) {
+    return data.readUint16();
   }
   return 0;
 }
@@ -104,111 +100,71 @@ export function decodeInteger(data: DataView): number {
 /**
  * Decode a float64 array from a member block's data.
  * Expects typeCode COORD_ARRAY (29974): uint32 byte length + float64 values.
- * @param data - DataView of the member block data.
+ * @param data - IOBuffer of the member block data.
  * @returns Float64Array of decoded values.
  */
-export function decodeFloat64Array(data: DataView): Float64Array {
-  const byteLength = data.getUint32(2, true);
+export function decodeFloat64Array(data: IOBuffer): Float64Array {
+  data.skip(2); // type code
+  const byteLength = data.readUint32();
   const count = byteLength / 8;
   const result = new Float64Array(count);
   for (let i = 0; i < count; i++) {
-    result[i] = data.getFloat64(6 + i * 8, true);
+    result[i] = data.readFloat64();
   }
   return result;
 }
 
 /**
  * Parse a history record block using the tag-based encoding (#u, $u, etc.).
- * @param data - DataView of the history record data.
+ * @param data - IOBuffer of the history record data.
  * @returns Parsed history record with text/numeric entries.
  */
-export function decodeHistoryRecord(data: DataView): SPHistoryRecord {
+export function decodeHistoryRecord(data: IOBuffer): SPHistoryRecord {
   const entries: Array<string | number> = [];
-  const bytes = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-  let offset = 0;
 
-  while (offset + 2 < bytes.length) {
-    const tag0 = bytes[offset];
-    const tag1 = bytes[offset + 1];
+  while (data.available(2)) {
+    const tag0 = data.readUint8();
+    const tag1 = data.readUint8();
 
     if (tag1 === 0x75) {
       if (tag0 === 0x23) {
         // #u: string value
-        offset += 2;
-        if (offset + 2 > bytes.length) break;
-        const textSize = data.getInt16(offset, true);
-        offset += 2;
-        if (offset + textSize > bytes.length) break;
-        const text = new TextDecoder().decode(
-          bytes.slice(offset, offset + textSize),
-        );
-        entries.push(text);
-        offset += textSize;
-      } else if (tag0 === 0x24) {
-        // $u: short numeric value
-        offset += 2;
-        if (offset + 2 > bytes.length) break;
-        entries.push(data.getInt16(offset, true));
-        offset += 2;
-      } else if (tag0 === 0x2c) {
-        // ,u: short numeric value
-        offset += 2;
-        if (offset + 2 > bytes.length) break;
-        entries.push(data.getInt16(offset, true));
-        offset += 2;
-      } else if (tag0 === 0x2d) {
-        // -u: numeric value
-        offset += 2;
-        if (offset + 2 > bytes.length) break;
-        entries.push(data.getInt16(offset, true));
-        offset += 2;
+        if (!data.available(2)) break;
+        const textSize = data.readInt16();
+        if (!data.available(textSize)) break;
+        entries.push(data.readUtf8(textSize));
+      } else if (tag0 === 0x24 || tag0 === 0x2c || tag0 === 0x2d) {
+        // $u, ,u, -u: short numeric value
+        if (!data.available(2)) break;
+        entries.push(data.readInt16());
       } else if (tag0 === 0x2f) {
         // /u: separator/navigation marker
-        offset += 2;
-      } else if (tag0 === 0x1a) {
-        // checksum-like value
-        offset += 2;
-        if (offset + 4 > bytes.length) break;
-        entries.push(data.getUint32(offset, true));
-        offset += 4;
+      } else if (tag0 === 0x1a || tag0 === 0x2b) {
+        // checksum-like or long value
+        if (!data.available(4)) break;
+        entries.push(data.readUint32());
       } else if (tag0 === 0x1c) {
         // float64 value
-        offset += 2;
-        if (offset + 8 > bytes.length) break;
-        entries.push(data.getFloat64(offset, true));
-        offset += 8;
+        if (!data.available(8)) break;
+        entries.push(data.readFloat64());
       } else if (tag0 === 0x1d) {
         // range: 2x float64
-        offset += 2;
-        if (offset + 16 > bytes.length) break;
-        entries.push(
-          data.getFloat64(offset, true),
-          data.getFloat64(offset + 8, true),
-        );
-        offset += 16;
+        if (!data.available(16)) break;
+        entries.push(data.readFloat64(), data.readFloat64());
       } else if (tag0 === 0x15) {
         // enum value
-        offset += 2;
-        if (offset + 2 > bytes.length) break;
-        entries.push(data.getUint16(offset, true));
-        offset += 2;
+        if (!data.available(2)) break;
+        entries.push(data.readUint16());
       } else if (tag0 === 0x16) {
         // array: uint32 byte length + float64 values
-        offset += 2;
-        if (offset + 4 > bytes.length) break;
-        const byteLen = data.getUint32(offset, true);
-        offset += 4 + byteLen;
-      } else if (tag0 === 0x2b) {
-        // long value
-        offset += 2;
-        if (offset + 4 > bytes.length) break;
-        entries.push(data.getUint32(offset, true));
-        offset += 4;
+        if (!data.available(4)) break;
+        const byteLen = data.readUint32();
+        data.skip(byteLen);
       } else {
-        offset += 1;
+        data.back();
       }
     } else {
-      offset += 1;
+      data.back();
     }
   }
 
