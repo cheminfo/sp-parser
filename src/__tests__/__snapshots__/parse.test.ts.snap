@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parse uv.sp file 1`] = `
+exports[`parse uv.sp file from readFileSync 1`] = `
 {
   "header": {
     "description": "2D constant interval DataSet file",

@@ -1,17 +1,12 @@
-import { readFileSync } from 'node:fs';
+import { openAsBlob, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { expect, test } from 'vitest';
 
 import { parse } from '../index.ts';
 
-test('parse uv.sp file', () => {
-  const buffer = readFileSync(join(import.meta.dirname, 'data', 'uv.sp'));
-  const data = new Uint8Array(
-    buffer.buffer,
-    buffer.byteOffset,
-    buffer.byteLength,
-  );
+test('parse uv.sp file from readFileSync', () => {
+  const data = readFileSync(join(import.meta.dirname, 'data', 'uv.sp'));
   const result = parse(data);
 
   expect(result.header.signature).toBe('PEPE');
@@ -41,6 +36,14 @@ test('parse uv.sp file', () => {
   expect(x.data).toHaveLength(y.data.length);
 
   expect(result).toMatchSnapshot();
+});
+
+test('parse uv.sp file from blob', async () => {
+  const blob = await openAsBlob(join(import.meta.dirname, 'data', 'uv.sp'));
+  const result = parse(await blob.arrayBuffer());
+
+  expect(result.header.signature).toBe('PEPE');
+  expect(result.spectra).toHaveLength(1);
 });
 
 test('invalid file throws error', () => {
